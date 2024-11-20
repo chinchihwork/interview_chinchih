@@ -75,15 +75,15 @@
       </q-table>
     </div>
   </q-page>
-  <!-- <q-dialog v-model="dialogVisible">
+  <q-dialog v-model="dialogVisible">
     <q-card>
       <q-card-section>
-        <div class="text-h6">Edit Details</div>
+        <div class="text-h6">編輯</div>
       </q-card-section>
 
       <q-card-section>
-        <q-input v-model="form.name" label="Name" />
-        <q-input v-model="form.age" label="Age" type="number" />
+        <q-input v-model="after_edit.name" label="Name" />
+        <q-input v-model="after_edit.age" label="Age" type="number" />
       </q-card-section>
 
       <q-card-actions>
@@ -91,13 +91,13 @@
         <q-btn flat label="Save" color="primary" @click="saveEdit"/>
       </q-card-actions>
     </q-card>
-  </q-dialog> -->
+  </q-dialog>
 </template>
 
 <script setup lang="ts">
 import axios from 'axios';
 import { QTableProps } from 'quasar';
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 interface btnType {
   label: string;
   icon: string;
@@ -136,8 +136,13 @@ const tableButtons = ref([
   },
 ]);
 
-const form = ref({
+const before_edit = reactive({
   name: 'test',
+  age: null,
+});
+
+const after_edit = ref({
+  name: '',
   age: null,
 });
 
@@ -145,7 +150,8 @@ const tempData = ref({
   name: '',
   age: '',
 });
-const dialogVisible = ref(False)
+
+const dialogVisible = ref(false);
 
 function adding () {
   const { name, age } = tempData.value;
@@ -159,30 +165,36 @@ function adding () {
 function handleClickOption(btn, data) {
   // ...
   if (btn.status == "edit"){
-    form.name = data.name;
-    form.age = data.age;
-    // dialogVisible.value = true;
+    before_edit.name = data.name;
+    before_edit.age = data.age;
+    after_edit.value.name = before_edit.name;
+    after_edit.value.age = before_edit.age;
+    dialogVisible.value = true;
   }
-  // else if (btn.status == "delete"){
-  //   blockData.value = blockData.value.filter((row_data) => !(row_data["name"] === data["name"] && row_data["age"] === data["age"]));
-  // }
+  else if (btn.status == "delete"){
+    blockData.value = blockData.value.filter((row_data) => !(row_data["name"] === data["name"] && row_data["age"] === data["age"]));
+  }
   else {
     console.log("Something's wrong , deal later");
   }
 }
 
-// function closeEditDialog (){
-//   dialogVisible.value = false;
-// };
+function closeEditDialog (){
+  dialogVisible.value = false;
+};
 
-// function saveEdit (){
-//   const editedRow = blockData.value.find((row) => row.name === form.name && row.age === form.age);
-//   if (editedRow) {
-//     editedRow.name = form.name;
-//     editedRow.age = form.age;
-//   }
-//   closeEditDialog();
-// };
+function saveEdit (){
+  console.log(after_edit)
+  const editedRowIndex = blockData.value.findIndex(
+    (row) => row.name === before_edit.name && row.age === before_edit.age
+  );
+  if (editedRowIndex !== -1) {
+    console.log("inside")
+    blockData.value[editedRowIndex].name = after_edit.value.name;
+    blockData.value[editedRowIndex].age = after_edit.value.age;
+  }
+  closeEditDialog();
+};
 </script>
 
 <style lang="scss" scoped>
