@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { QTableProps } from 'quasar';
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 interface btnType {
   label: string;
   icon: string;
@@ -77,6 +77,7 @@ const blockData = ref([
     age: 25,
   },
 ]);
+
 const tableConfig = ref([
   {
     label: '姓名',
@@ -121,9 +122,13 @@ const tempData = ref({
 
 const dialogVisible = ref(false);
 
+onMounted(() => {
+  getTable();
+});
+
 function adding() {
   const { name, age } = tempData.value;
-
+  createTableData(tempData.value);
   blockData.value.push({
     name,
     age: parseInt(age, 10), // Ensure age is stored as a number
@@ -140,6 +145,14 @@ function handleClickOption(btn, data) {
     dialogVisible.value = true;
   }
   else if (btn.status == "delete") {
+    const item = blockData.value.find(row => row.name === data.name && row.age === data.age);
+    if (item) {
+      deleteTableData(item.id)
+      blockData.value = blockData.value.filter((row_data) => !(row_data["name"] === data["name"] && row_data["age"] === data["age"]));
+    } else {
+      console.log("something'wrong")
+    }
+    deleteTableData(item.id)
     blockData.value = blockData.value.filter((row_data) => !(row_data["name"] === data["name"] && row_data["age"] === data["age"]));
   }
   else {
@@ -163,6 +176,56 @@ function saveEdit() {
   }
   closeEditDialog();
 };
+
+async function createTableData(new_data: any) {
+  try {
+    const res = await axios.post('https://dahua.metcfire.com.tw/api/CRUDTest', {
+      name: new_data.name,
+      age: new_data.age,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (res.status === 200) {
+      console.log("success");
+    } else {
+      console.log("fail");
+    }
+  } catch (error) {
+    console.log("something's wrong")
+  }
+}
+
+async function getTable() {
+  try {
+    const res = await axios.get('https://dahua.metcfire.com.tw/api/CRUDTest/a');
+    blockData.value.push(...res.data);
+    console.log(blockData)
+  } catch (error) {
+    console.log("something's wrong")
+  }
+}
+async function deleteTableData(id: string) {
+  try {
+    const res = await axios.delete(`https://dahua.metcfire.com.tw/api/CRUDTest/${id}`);
+    if (res.status === 200) {
+      console.log("success");
+    } else {
+      console.log("fail");
+    }
+  } catch (error) {
+    console.log("something's wrong")
+  }
+}
+// async function updateTableData() {
+//   try {
+//     const res = await axios.get('https://dahua.metcfire.com.tw/api/CRUDTest');
+//     console.log(res);
+//   } catch (error) {
+//     console.log("something's wrong")
+//   }
+// }
 
 const ageRules = computed(() => [
   val => !!val || '必填欄位',  // Checks if value exists (required field)
