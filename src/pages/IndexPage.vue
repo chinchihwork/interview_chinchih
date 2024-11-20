@@ -4,7 +4,7 @@
       <div class="q-mb-xl">
         <q-input v-model="tempData.name" label="姓名" />
         <q-input v-model="tempData.age" label="年齡" />
-        <q-btn color="primary" class="q-mt-md" @click="handleButtonClick">新增</q-btn>
+        <q-btn color="primary" class="q-mt-md" @click="adding">新增</q-btn>
       </div>
 
       <q-table
@@ -35,7 +35,7 @@
               :props="props"
               style="min-width: 120px"
             >
-              <div>{{ col.value }}</div>
+              <div>{{ col.value }} </div>
             </q-td>
             <q-td class="text-right" auto-width v-if="tableButtons.length > 0">
               <q-btn
@@ -75,6 +75,23 @@
       </q-table>
     </div>
   </q-page>
+  <!-- <q-dialog v-model="dialogVisible">
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">Edit Details</div>
+      </q-card-section>
+
+      <q-card-section>
+        <q-input v-model="form.name" label="Name" />
+        <q-input v-model="form.age" label="Age" type="number" />
+      </q-card-section>
+
+      <q-card-actions>
+        <q-btn flat label="Cancel" color="secondary" @click="closeEditDialog"/>
+        <q-btn flat label="Save" color="primary" @click="saveEdit"/>
+      </q-card-actions>
+    </q-card>
+  </q-dialog> -->
 </template>
 
 <script setup lang="ts">
@@ -119,12 +136,18 @@ const tableButtons = ref([
   },
 ]);
 
+const form = ref({
+  name: 'test',
+  age: null,
+});
+
 const tempData = ref({
   name: '',
   age: '',
 });
+const dialogVisible = ref(False)
 
-function handleButtonClick () {
+function adding () {
   const { name, age } = tempData.value;
 
   blockData.value.push({
@@ -133,11 +156,33 @@ function handleButtonClick () {
   });  
 }
 
-// function handleClickOption(btn, data) {
-//   // ...
-// }
+function handleClickOption(btn, data) {
+  // ...
+  if (btn.status == "edit"){
+    form.name = data.name;
+    form.age = data.age;
+    // dialogVisible.value = true;
+  }
+  // else if (btn.status == "delete"){
+  //   blockData.value = blockData.value.filter((row_data) => !(row_data["name"] === data["name"] && row_data["age"] === data["age"]));
+  // }
+  else {
+    console.log("Something's wrong , deal later");
+  }
+}
 
+// function closeEditDialog (){
+//   dialogVisible.value = false;
+// };
 
+// function saveEdit (){
+//   const editedRow = blockData.value.find((row) => row.name === form.name && row.age === form.age);
+//   if (editedRow) {
+//     editedRow.name = form.name;
+//     editedRow.age = form.age;
+//   }
+//   closeEditDialog();
+// };
 </script>
 
 <style lang="scss" scoped>
