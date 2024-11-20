@@ -2,22 +2,13 @@
   <q-page class="row q-pt-xl">
     <div class="full-width q-px-xl">
       <div class="q-mb-xl">
-        <q-input v-model="tempData.name" label="姓名" />
-        <q-input v-model="tempData.age" label="年齡" />
+        <q-input v-model="tempData.name" label="姓名" :rules="nameRules" />
+        <q-input v-model="tempData.age" label="年齡" :rules="nameRules" />
         <q-btn color="primary" class="q-mt-md" @click="adding">新增</q-btn>
       </div>
 
-      <q-table
-        flat
-        bordered
-        ref="tableRef"
-        :rows="blockData"
-        :columns="(tableConfig as QTableProps['columns'])"
-        row-key="id"
-        hide-pagination
-        separator="cell"
-        :rows-per-page-options="[0]"
-      >
+      <q-table flat bordered ref="tableRef" :rows="blockData" :columns="(tableConfig as QTableProps['columns'])"
+        row-key="id" hide-pagination separator="cell" :rows-per-page-options="[0]">
         <template v-slot:header="props">
           <q-tr :props="props">
             <q-th v-for="col in props.cols" :key="col.name" :props="props">
@@ -29,34 +20,14 @@
 
         <template v-slot:body="props">
           <q-tr :props="props">
-            <q-td
-              v-for="col in props.cols"
-              :key="col.name"
-              :props="props"
-              style="min-width: 120px"
-            >
+            <q-td v-for="col in props.cols" :key="col.name" :props="props" style="min-width: 120px">
               <div>{{ col.value }} </div>
             </q-td>
             <q-td class="text-right" auto-width v-if="tableButtons.length > 0">
-              <q-btn
-                @click="handleClickOption(btn, props.row)"
-                v-for="(btn, index) in tableButtons"
-                :key="index"
-                size="sm"
-                color="grey-6"
-                round
-                dense
-                :icon="btn.icon"
-                class="q-ml-md"
-                padding="5px 5px"
-              >
-                <q-tooltip
-                  transition-show="scale"
-                  transition-hide="scale"
-                  anchor="top middle"
-                  self="bottom middle"
-                  :offset="[10, 10]"
-                >
+              <q-btn @click="handleClickOption(btn, props.row)" v-for="(btn, index) in tableButtons" :key="index"
+                size="sm" color="grey-6" round dense :icon="btn.icon" class="q-ml-md" padding="5px 5px">
+                <q-tooltip transition-show="scale" transition-hide="scale" anchor="top middle" self="bottom middle"
+                  :offset="[10, 10]">
                   {{ btn.label }}
                 </q-tooltip>
               </q-btn>
@@ -64,10 +35,7 @@
           </q-tr>
         </template>
         <template v-slot:no-data="{ icon }">
-          <div
-            class="full-width row flex-center items-center text-primary q-gutter-sm"
-            style="font-size: 18px"
-          >
+          <div class="full-width row flex-center items-center text-primary q-gutter-sm" style="font-size: 18px">
             <q-icon size="2em" :name="icon" />
             <span> 無相關資料 </span>
           </div>
@@ -82,13 +50,13 @@
       </q-card-section>
 
       <q-card-section>
-        <q-input v-model="after_edit.name" label="Name" />
-        <q-input v-model="after_edit.age" label="Age" type="number" />
+        <q-input v-model="after_edit.name" :rules="nameRules" label="Name" />
+        <q-input v-model="after_edit.age" label="Age" type="number" :rules="ageRules" />
       </q-card-section>
 
       <q-card-actions>
-        <q-btn flat label="Cancel" color="secondary" @click="closeEditDialog"/>
-        <q-btn flat label="Save" color="primary" @click="saveEdit"/>
+        <q-btn flat label="Cancel" color="secondary" @click="closeEditDialog" />
+        <q-btn flat label="Save" color="primary" @click="saveEdit" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -97,7 +65,7 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { QTableProps } from 'quasar';
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 interface btnType {
   label: string;
   icon: string;
@@ -153,25 +121,25 @@ const tempData = ref({
 
 const dialogVisible = ref(false);
 
-function adding () {
+function adding() {
   const { name, age } = tempData.value;
 
   blockData.value.push({
     name,
     age: parseInt(age, 10), // Ensure age is stored as a number
-  });  
+  });
 }
 
 function handleClickOption(btn, data) {
   // ...
-  if (btn.status == "edit"){
+  if (btn.status == "edit") {
     before_edit.name = data.name;
     before_edit.age = data.age;
     after_edit.value.name = before_edit.name;
     after_edit.value.age = before_edit.age;
     dialogVisible.value = true;
   }
-  else if (btn.status == "delete"){
+  else if (btn.status == "delete") {
     blockData.value = blockData.value.filter((row_data) => !(row_data["name"] === data["name"] && row_data["age"] === data["age"]));
   }
   else {
@@ -179,11 +147,11 @@ function handleClickOption(btn, data) {
   }
 }
 
-function closeEditDialog (){
+function closeEditDialog() {
   dialogVisible.value = false;
 };
 
-function saveEdit (){
+function saveEdit() {
   console.log(after_edit)
   const editedRowIndex = blockData.value.findIndex(
     (row) => row.name === before_edit.name && row.age === before_edit.age
@@ -195,6 +163,16 @@ function saveEdit (){
   }
   closeEditDialog();
 };
+
+const ageRules = computed(() => [
+  val => !!val || '必填欄位',  // Checks if value exists (required field)
+  val => (val >= 0 && val <= 150) || '不合理的年齡',  // Checks if age is between 0 and 150
+]);
+
+const nameRules = computed(() => [
+  val => (val && val.length > 0 && val.length < 15) || '必填欄位，最多15字',  // Checks if the value is not empty and its length is between 1 and 15 characters
+]);
+
 </script>
 
 <style lang="scss" scoped>
